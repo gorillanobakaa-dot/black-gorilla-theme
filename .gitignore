@@ -1,0 +1,12 @@
+# Microsoft fonts: the EULA licenses USE, not REDISTRIBUTION.
+# This repo ships the METHOD (get-microsoft-fonts.sh), never the binaries.
+# Settled 2026-08-03, see 11.FONT.SYSTEM/README.fonts.md in the Firefox project.
+*.ttf
+*.ttc
+*.otf
+!TwemojiMozilla.ttf
+
+# Package build output. The .deb is a release artifact — attach it to a
+# release, do not commit it. build/ is a staging tree rebuilt every run.
+build/
+dist/
