@@ -8,6 +8,22 @@
 
 ---
 
+## 📸 Screenshots (Click for Full Resolution)
+
+<p align="center">
+  <a href="screenshots/screenshot-1.png">
+    <img src="screenshots/screenshot-1.png" alt="Black Gorilla Theme - Folder and File View" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="screenshots/screenshot-2.png">
+    <img src="screenshots/screenshot-2.png" alt="Black Gorilla Theme - Right-Click Context Menu with 1px Cyan Border" width="100%" />
+  </a>
+</p>
+
+---
+
 ## 🧸 Section A — For the Layman
 
 ### The problem
