@@ -1,6 +1,17 @@
 <!-- Version: 26.08.15-08-17 · updated 26-08-15-08-17 -->
 # Black Gorilla Theme
 
+<!-- WHO-THIS-IS-FOR: managed block, do not edit by hand -->
+
+**A pure black, high contrast GTK3 and GTK4 theme, built for cheap screens and tired eyes.**
+
+Built for the people every other tool prices out: kids with no credit
+card, 15-year-old laptops, data sold by the megabyte. Free forever, by
+design, not as a trial.
+Why, with the numbers: [PHILOSOPHY.md](https://github.com/gorillanobakaa-dot/Gorilla.Opencode/blob/main/PHILOSOPHY.md)
+
+<!-- /WHO-THIS-IS-FOR -->
+
 > *Two small CSS files that make dark-theme text actually readable. No root, no
 > package to install, nothing outside your home folder, one command to undo.*
 
