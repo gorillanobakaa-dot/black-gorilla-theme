@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.10.20-18-27 · updated 26-10-20-18-27
+# Version: 26.10.20-18-42 · updated 26-10-20-18-42
 # install.sh — Black Gorilla Theme: a pure black, high-contrast GTK theme that
 # fixes secondary text, context menu borders, and uses optical-size typography
 # when the fonts are available.
@@ -136,6 +136,12 @@ popover > contents {
 /* Entries: bright thin edge at rest, full-strength accent on focus.
  * libadwaita's stock focus ring is a translucent box-shadow, which is what
  * makes it look faded — it is removed, not tinted. */
+/* Window edges: the same 1px cyan outline as an entry at rest. libadwaita
+ * draws the edge as a box-shadow mixed from currentColor at low opacity,
+ * invisible on black, so two windows on top of each other had no visible
+ * edge. No :backdrop qualifier: focused and unfocused look the same. */
+window.csd, window.solid-csd { outline: 1px solid $FG; outline-offset: -1px; }
+
 entry, .entry, entry.search, searchbar entry {
   outline: 1px solid $FG; outline-offset: -1px;
   border: none; box-shadow: none;
@@ -269,20 +275,33 @@ row:selected, list row:selected, menuitem:selected,
 }
 row:selected label, menuitem:selected label,
 .view:selected label, row:selected .dim-label { color: $BG; opacity: 1.0; }
-/* Unfocused windows keep full contrast. GTK3's Adwaita writes its backdrop
- * colours as fixed greys (#919190 text), not names, so the named colours above
- * never reach them: the whole window's text greyed out on Alt+Tab. These are
- * the elements it greys; the user stylesheet wins on priority alone. */
-.background:backdrop { color: $FG; }
-button:backdrop:not(:disabled):not(.suggested-action):not(.destructive-action),
-notebook > header > tabs > arrow:backdrop:not(:disabled),
-menu menuitem:backdrop, .menu menuitem:backdrop, .context-menu menuitem:backdrop,
-placessidebar row:backdrop, notebook > header tab:backdrop,
-.inline-toolbar toolbutton > button:backdrop,
-switch:backdrop, scale slider:backdrop, spinner:backdrop, .keycap:backdrop { color: inherit; }
+/* Window edges: 1px cyan, as GTK4. GTK3 draws the edge on the decoration
+ * node as a black 1px ring (box-shadow 0 0 0 1px), invisible on black. */
+decoration, decoration:backdrop { outline: 1px solid $FG; outline-offset: -1px; }
+
+/* Text is cyan, focused AND unfocused. GTK3's Adwaita writes its text colours
+ * as fixed values (#eeeeec focused, #919190 backdrop), not names, so the named
+ * colours above never reach them: focused text stayed near-white and turned
+ * grey on Alt+Tab. The root and the text-bearing widgets that set their own
+ * colour get $FG; the rest inherit it. No :backdrop qualifier, so both states
+ * match. The user stylesheet wins on priority alone. Coloured buttons keep
+ * their own white-on-colour text. */
+.background, .background:backdrop,
+.view, iconview, .view text, iconview text, textview text, list,
+entry, spinbutton:not(.vertical), calendar, .keycap { color: $FG; }
+button:not(:disabled):not(.suggested-action):not(.destructive-action),
+notebook > header > tabs > arrow:not(:disabled),
+menu menuitem, .menu menuitem, .context-menu menuitem,
+placessidebar row, notebook > header tab,
+.inline-toolbar toolbutton > button,
+switch, scale slider, spinner { color: inherit; }
 button.sidebar-button:backdrop > image { opacity: 1.0; }
-row:selected:backdrop, row:selected:backdrop label, row:selected:backdrop button,
-.view:selected:backdrop, menuitem:selected:backdrop label { color: $BG; }
+/* A hovered GTK3 menu item is GTK3's selection: same solid block as above. */
+menu menuitem:hover, .menu menuitem:hover, .context-menu menuitem:hover {
+  background-color: $ACCENT; background-image: none; color: $BG;
+}
+row:selected, row:selected label, row:selected button,
+.view:selected, menuitem:selected label, menuitem:hover label { color: $BG; }
 .dim-label, label.dim-label, .dim-label:backdrop { opacity: 1.0; color: $DIM; }
 *:disabled, label:disabled, *:disabled:backdrop { opacity: 1.0; color: $DISABLED; }
 * { transition-duration: 0.01ms; animation-duration: 0.01ms; }
@@ -368,11 +387,21 @@ say "Reversible at any time with: $0 --revert"
 say
 
 mkdir -p "$(dirname "$GTK4")" "$(dirname "$GTK3")"
-strip "$GTK4"; strip "$GTK3"
-printf '%s\n' "$GTK4_BLOCK" >> "$GTK4"
-printf '%s\n' "$GTK3_BLOCK" >> "$GTK3"
-say "  wrote $GTK4"
-say "  wrote $GTK3"
+# Write only when the result differs. An identical rewrite still moves the
+# file's time, and every open app then LOOKS stale to a checker comparing its
+# start time with the stylesheet's (fieldkit gtk-theme check, 2026-10-20).
+write_css () {
+    local f="$1" block="$2" tmp="$1.new"
+    if [ -f "$f" ]; then cp "$f" "$tmp"; else : > "$tmp"; fi
+    strip "$tmp"; printf '%s\n' "$block" >> "$tmp"
+    if [ -f "$f" ] && cmp -s "$tmp" "$f"; then
+        rm -f "$tmp"; say "  unchanged $f"
+    else
+        cat "$tmp" > "$f" && rm -f "$tmp"; say "  wrote $f"
+    fi
+}
+write_css "$GTK4" "$GTK4_BLOCK"
+write_css "$GTK3" "$GTK3_BLOCK"
 
 if [ "${1:-}" = "--fonts" ]; then
     if command -v gsettings >/dev/null; then

@@ -1,4 +1,4 @@
-<!-- Version: 26.10.20-18-27 · updated 26-10-20-18-27 -->
+<!-- Version: 26.10.20-18-42 · updated 26-10-20-18-42 -->
 # Black Gorilla Theme — Technical & Dual-Track Documentation
 
 > Pure black (#000000), high-contrast (16.75:1) GTK3 & GTK4/libadwaita theme with crisp 1px cyan borders on floating menus and optical-size typography.
@@ -22,8 +22,8 @@ Now, when you right-click anywhere on the desktop or inside a folder:
 
 ### 3. Renaming & Versioning
 - **Name:** Officially branded as `black-gorilla-theme`.
-- **Version:** Uses the standard Gorilla timestamp format: `26.10.20-18-27` (YY.MM.DD-HH-MM).
-- **Package:** Generates a lightweight (~16 KB) click-to-install `.deb` package (`black-gorilla-theme_26.10.20-18-27_all.deb`).
+- **Version:** Uses the standard Gorilla timestamp format: `26.10.20-18-42` (YY.MM.DD-HH-MM).
+- **Package:** Generates a lightweight (~16 KB) click-to-install `.deb` package (`black-gorilla-theme_26.10.20-18-42_all.deb`).
 
 ---
 
@@ -203,6 +203,9 @@ GTK3 text is now `$FG` (cyan), the theme's declared foreground, so GTK3 text
 changes from near-white to cyan on Alt+Tab. That makes it readable rather
 than identical to the focused state.
 
+**Superseded 26.10.20-18-42 (owner's request, 2026-10-20):** focused GTK3 text is now cyan as well, so
+GTK3 text no longer changes colour on Alt+Tab. See section E.
+
 **Upgrade path.** `--apply-once` exited whenever the decided-stamp existed, and
 `postinst` keeps the stamp on upgrade, so a packaged upgrade never rewrote the
 CSS. It now re-applies when the stamp exists AND `~/.config/gtk-4.0/gtk.css`
@@ -225,3 +228,43 @@ blocks: fonts and the revert state file are not touched.
   the package install).
 - NOT yet verified: the result on screen. Files must be restarted to read the
   new CSS, and the owner deferred that while a build ran.
+
+---
+
+## Section E: GTK3 text and window edges (release 26.10.20-18-42)
+
+### Layman track
+
+**What changed (stated in input: the owner asked for both).** Older programs (GTK3) used to show
+near-white text while in use and cyan text when another window was on top. Their text is now cyan in
+both cases. Every window also has a thin cyan line around its edge, the same line the path bar has,
+so you can see where one window ends and the next begins on a black screen.
+
+**Checked on screen (stated in input).** The owner Alt+Tabbed through several programs: the
+unfocused Files window kept its colours, and the cyan edge showed around Files.
+
+### Developer track
+
+**GTK3 text.** GTK3 Adwaita sets text as fixed literals (`.background { color: #eeeeec }`,
+`.view`, `entry`, `button`, `notebook > header tab`, `list`, `calendar`, `.keycap`), which named
+colours never reach. The block now sets `$FG` on `.background`, `.background:backdrop` and the
+text-bearing nodes, and `color: inherit` on buttons, tabs, menu items, places-sidebar rows,
+switches and sliders, with no `:backdrop` qualifier so both states are the same. Coloured buttons
+(`.suggested-action`, `.destructive-action`) and `:disabled` are excluded. A hovered GTK3 menu item
+(GTK3's selection) is the solid pink block, per the settled selection spec.
+
+**Window edges.** Per the settled theme spec (outline, never border; pure cyan; no box-shadow):
+GTK4 `window.csd, window.solid-csd { outline: 1px solid $FG; outline-offset: -1px; }`; GTK3
+`decoration, decoration:backdrop` the same. libadwaita's own edge is a box-shadow of currentColor at
+`--border-opacity`, and GTK3's is `box-shadow: 0 0 0 1px rgba(0,0,0,0.75)`: both invisible on black.
+Programs whose window frame is drawn by the compositor (Firefox, Electron apps) are not GTK CSD
+windows and do not get this edge (model inference, not tested).
+
+### Verification evidence
+
+- Both stylesheets parse in GTK 4.18 and GTK 3.24 with 0 errors (the same check reports a broken rule).
+- The edge was seen on screen by the owner, screenshot `screenshots/window-edge-1px-cyan.png` (18:41:12).
+- Screenshots: `unfocused-before-26.08.15.png` (18:11:18, the bug), `unfocused-after-26.10.20.png`
+  (18:37:57, the fix), unscaled 1600x890 originals from the owner's screen.
+- Harness: `fieldkit gtk-theme check` (Fieldkit) now runs these checks deterministically, and
+  `fieldkit build-harness symptom` points the owner's own words for this bug at it.

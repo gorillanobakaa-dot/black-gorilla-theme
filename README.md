@@ -1,4 +1,4 @@
-<!-- Version: 26.10.20-18-27 · updated 26-10-20-18-27 -->
+<!-- Version: 26.10.20-18-42 · updated 26-10-20-18-42 -->
 # Black Gorilla Theme
 
 <!-- WHO-THIS-IS-FOR: managed block, do not edit by hand -->
@@ -30,6 +30,31 @@ Why, with the numbers: [PHILOSOPHY.md](https://github.com/gorillanobakaa-dot/Gor
 <p align="center">
   <a href="screenshots/screenshot-2.png">
     <img src="screenshots/screenshot-2.png" alt="Black Gorilla Theme - Right-Click Context Menu with 1px Cyan Border" width="100%" />
+  </a>
+</p>
+
+**Unfocused windows (fixed 2026-10-20).** Before: with System Monitor on top, Files has lost focus and its sidebar
+has turned into a light grey bar with pale text (release 26.08.15-08-17).
+
+<p align="center">
+  <a href="screenshots/unfocused-before-26.08.15.png">
+    <img src="screenshots/unfocused-before-26.08.15.png" alt="Before the fix: Files unfocused behind System Monitor, its sidebar a light grey bar with faded cyan text" width="100%" />
+  </a>
+</p>
+
+After: the same situation keeps the black background and full-strength cyan.
+
+<p align="center">
+  <a href="screenshots/unfocused-after-26.10.20.png">
+    <img src="screenshots/unfocused-after-26.10.20.png" alt="After the fix: Files unfocused behind System Monitor keeps a black sidebar with bright cyan text and outlines" width="100%" />
+  </a>
+</p>
+
+Window edges are a 1px cyan outline, the same as the path bar at rest, so a window is visible against black.
+
+<p align="center">
+  <a href="screenshots/window-edge-1px-cyan.png">
+    <img src="screenshots/window-edge-1px-cyan.png" alt="Files window with a 1px cyan outline around its whole edge, against a black desktop" width="100%" />
   </a>
 </p>
 
@@ -81,7 +106,7 @@ machine. On Debian, Ubuntu, Mint and Pop!_OS you can also install it from a
 terminal:
 
 ```bash
-sudo apt install ./black-gorilla-theme_26.10.20-18-27_all.deb
+sudo apt install ./black-gorilla-theme_26.10.20-18-42_all.deb
 ```
 
 **The no-package way**, if you'd rather not install anything system-wide, or
@@ -114,7 +139,7 @@ Then restart an app (or log out and back in) to see the change.
 ./build-deb.sh
 ```
 
-Produces `dist/black-gorilla-theme_26.10.20-18-27_all.deb`, about 16 KB. No build
+Produces `dist/black-gorilla-theme_26.10.20-18-42_all.deb`, about 16 KB. No build
 dependencies beyond `dpkg-deb` — it is shell and CSS.
 
 ### Will it work on my computer?
