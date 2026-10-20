@@ -1,0 +1,96 @@
+// Version: 26.10.20-19-34 · updated 26-10-20-19-34
+// Black Gorilla palette for GTK3 Adwaita (replaces gtk/theme/Adwaita/_colors.scss of GTK 3.24.49).
+//
+// Adwaita is built from this one file: every widget colour in _common.scss and _drawing.scss is derived from the
+// variables below. GTK3 compiles the result into libgtk-3 as FIXED values, which is why a user gtk.css that only
+// redefines @named colours never reaches most of it (the 2026-10-20 unfocused-window bug, the grey terminal header
+// bar). Rebuilding Adwaita from its own sources with this palette changes every one of those values at once.
+//
+// Every variable name upstream defines is kept, so the rest of Adwaita compiles unchanged. The values come from
+// install.sh (BG/FG/ACCENT/DIM/DISABLED). Focused and unfocused ("backdrop") values are the SAME on purpose: a
+// window must look the same whether it is in use or not.
+//
+// Not settled, kept from upstream: $error_color, $destructive_color, $warning_color hue for the progress of a
+// warning. Upstream red #cc0000 on black is 3.4:1 (model inference from the WCAG formula, not measured on screen).
+
+$bg: #000000;      // BG
+$fg: #00FFFF;      // FG, 16.75:1 on black
+$accent: #FFC0CB;  // ACCENT, selection block, black text on it 13.65:1
+$dim: #00B8B8;     // DIM, secondary text 8.55:1
+$disabled: #00A0A0;// DISABLED, 6.54:1
+
+$base_color: $bg;
+$text_color: $fg;
+$caret_color: $fg;
+$bg_color: $bg;
+$fg_color: $fg;
+
+$selected_fg_color: $bg;
+$selected_bg_color: $accent;
+$selected_borders_color: $accent;
+$borders_color: $fg;
+$alt_borders_color: $fg;
+$borders_edge: transparent;
+$link_color: $fg;
+$link_visited_color: $accent;
+$top_hilight: $borders_edge;
+$dark_fill: $bg;
+$headerbar_color: $bg;
+$menu_color: $bg;
+$popover_bg_color: $bg;
+$popover_hover_color: $bg;
+
+$scrollbar_bg_color: $bg;
+$scrollbar_slider_color: $dim;
+$scrollbar_slider_hover_color: $fg;
+$scrollbar_slider_active_color: $accent;
+
+$warning_color: $accent;
+$error_color: #cc0000;
+$success_color: $fg;
+$destructive_color: #e01b24;
+
+$osd_fg_color: $fg;
+$osd_text_color: $fg;
+$osd_bg_color: $bg;
+$osd_insensitive_bg_color: $bg;
+$osd_insensitive_fg_color: $disabled;
+$osd_borders_color: $fg;
+
+$sidebar_bg_color: $bg;
+$base_hover_color: transparent;
+
+$tooltip_borders_color: $fg;
+$shadow_color: transparent;
+
+$drop_target_color: $fg;
+
+//insensitive state derived colors
+$insensitive_fg_color: $disabled;
+$insensitive_bg_color: $bg;
+$insensitive_borders_color: $disabled;
+
+//colors for the backdrop state: identical to focused
+$backdrop_base_color: $base_color;
+$backdrop_text_color: $text_color;
+$backdrop_bg_color: $bg_color;
+$backdrop_fg_color: $fg_color;
+$backdrop_insensitive_color: $disabled;
+$backdrop_selected_fg_color: $selected_fg_color;
+$backdrop_borders_color: $borders_color;
+$backdrop_dark_fill: $dark_fill;
+$backdrop_sidebar_bg_color: $sidebar_bg_color;
+
+$backdrop_scrollbar_bg_color: $scrollbar_bg_color;
+$backdrop_scrollbar_slider_color: $scrollbar_slider_color;
+
+$backdrop_menu_color: $menu_color;
+
+//special cased widget colors
+$suggested_bg_color: $selected_bg_color;
+$suggested_border_color: $selected_borders_color;
+$progress_bg_color: $selected_bg_color;
+$progress_border_color: $selected_borders_color;
+$checkradio_bg_color: $selected_bg_color;
+$checkradio_fg_color: $selected_fg_color;
+$checkradio_borders_color: $selected_borders_color;

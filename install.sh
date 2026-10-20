@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.10.20-18-42 · updated 26-10-20-18-42
+# Version: 26.10.20-19-34 · updated 26-10-20-19-34
 # install.sh — Black Gorilla Theme: a pure black, high-contrast GTK theme that
 # fixes secondary text, context menu borders, and uses optical-size typography
 # when the fonts are available.
@@ -7,6 +7,9 @@
 # WHAT IT DOES, IN ONE SENTENCE
 #   Writes two small CSS files into your own config directory. No root, no
 #   package, no theme to select anywhere, nothing outside your home folder.
+#   UPDATED 2026-10-20: plus one theme, Black-Gorilla (GTK3's Adwaita rebuilt
+#   with our palette), copied to ~/.local/share/themes and selected once; the
+#   previous theme name is saved for --revert. Still no root, still only $HOME.
 #
 # WHY IT EXISTS — the measured version
 #   Adwaita-dark draws secondary text (every row subtitle, caption and help
@@ -43,6 +46,10 @@
 #   packaged theme there would change nothing in Files, Settings, or any modern
 #   GNOME app. The per-user file is not a shortcut; it is the only mechanism
 #   libadwaita honours.
+#   CORRECTION 2026-10-20: true for libadwaita, not for GTK3 (Terminal, Disks,
+#   Document Viewer, Evolution ...). GTK3 draws Adwaita's FIXED colours, which
+#   no gtk.css block reaches, and it DOES read a selected theme. So GTK3 apps
+#   now get one: adwaita/build-adwaita.sh, see THEME_* below.
 set -u
 
 GTK4="$HOME/.config/gtk-4.0/gtk.css"
@@ -50,6 +57,14 @@ GTK3="$HOME/.config/gtk-3.0/gtk.css"
 BEGIN="/* BEGIN black-gorilla-theme */"
 END="/* END black-gorilla-theme */"
 STATE="$HOME/.config/black-gorilla-theme.state"
+# GTK3 (and plain GTK4) apps draw Adwaita compiled with FIXED colours that no
+# named colour reaches, so they get a real theme: Adwaita rebuilt from its own
+# sources with our palette (adwaita/build-adwaita.sh, 2026-10-20). The package
+# ships it in /usr/share/themes; a checkout copies it to ~/.local/share/themes.
+THEME_NAME="Black-Gorilla"
+THEME_SYS="/usr/share/themes/$THEME_NAME"
+THEME_USER="$HOME/.local/share/themes/$THEME_NAME"
+THEME_SRC="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/theme/$THEME_NAME"
 # Records that this user has made a choice — applied OR reverted. Its presence
 # stops the package re-applying at every login over a deliberate revert.
 STAMP="$HOME/.config/black-gorilla-theme.decided"
@@ -141,6 +156,10 @@ popover > contents {
  * invisible on black, so two windows on top of each other had no visible
  * edge. No :backdrop qualifier: focused and unfocused look the same. */
 window.csd, window.solid-csd { outline: 1px solid $FG; outline-offset: -1px; }
+/* Dialogs drawn INSIDE a window (libadwaita AdwDialog: Settings > System
+ * Details, About boxes) are a sheet, not a window: libadwaita outlines it in
+ * near-transparent white, invisible on black. Cyan, as every edge. */
+floating-sheet > sheet, bottom-sheet > sheet { outline: 1px solid $FG; outline-offset: -1px; }
 
 entry, .entry, entry.search, searchbar entry {
   outline: 1px solid $FG; outline-offset: -1px;
@@ -276,8 +295,11 @@ row:selected, list row:selected, menuitem:selected,
 row:selected label, menuitem:selected label,
 .view:selected label, row:selected .dim-label { color: $BG; opacity: 1.0; }
 /* Window edges: 1px cyan, as GTK4. GTK3 draws the edge on the decoration
- * node as a black 1px ring (box-shadow 0 0 0 1px), invisible on black. */
-decoration, decoration:backdrop { outline: 1px solid $FG; outline-offset: -1px; }
+ * node as a black 1px ring (box-shadow 0 0 0 1px), invisible on black.
+ * CORRECTED 2026-10-20: this said outline, which GTK3 draws only for focus
+ * rectangles, so no GTK3 window ever showed it. The ring is the mechanism. */
+decoration, decoration:backdrop { box-shadow: 0 0 0 1px $FG; }
+window.unified > decoration-overlay { box-shadow: inset 0 0 0 1px $FG; }
 
 /* Text is cyan, focused AND unfocused. GTK3's Adwaita writes its text colours
  * as fixed values (#eeeeec focused, #919190 backdrop), not names, so the named
@@ -353,6 +375,8 @@ INFO
               . "$st"
               [ -n "${OLD_FONT:-}" ] && gsettings set org.gnome.desktop.interface font-name "$OLD_FONT"
               [ -n "${OLD_SCALE:-}" ] && gsettings set org.gnome.desktop.interface text-scaling-factor "$OLD_SCALE"
+              [ -n "${OLD_THEME:-}" ] && gsettings set org.gnome.desktop.interface gtk-theme "$OLD_THEME" \
+                  && echo "  GTK3 theme -> $OLD_THEME (theme files are left in place, unselected)"
               rm -f "$st"
               echo "  restored previous font settings"
           fi
@@ -403,9 +427,30 @@ write_css () {
 write_css "$GTK4" "$GTK4_BLOCK"
 write_css "$GTK3" "$GTK3_BLOCK"
 
+# The rebuilt Adwaita for GTK3 apps. Files are refreshed when they differ; the
+# theme is SELECTED only once (the previous name is saved for --revert), so a
+# person who later picks another theme is never overridden at login.
+if [ ! -d "$THEME_SYS/gtk-3.0" ] && [ -d "$THEME_SRC/gtk-3.0" ] \
+   && ! diff -rq "$THEME_SRC" "$THEME_USER" >/dev/null 2>&1; then
+    mkdir -p "$THEME_USER" && cp -r "$THEME_SRC/." "$THEME_USER/"
+    say "  wrote $THEME_USER"
+fi
+if [ -d "$THEME_SYS/gtk-3.0" ] || [ -d "$THEME_USER/gtk-3.0" ]; then
+    if command -v gsettings >/dev/null && ! grep -q '^OLD_THEME=' "$STATE" 2>/dev/null; then
+        cur="$(gsettings get org.gnome.desktop.interface gtk-theme | tr -d "'")"
+        if [ "$cur" != "$THEME_NAME" ]; then
+            echo "OLD_THEME='$cur'" >> "$STATE"
+            gsettings set org.gnome.desktop.interface gtk-theme "$THEME_NAME"
+            say "  GTK3 theme -> $THEME_NAME (was $cur, saved for --revert)"
+        fi
+    fi
+else
+    say "  note: $THEME_NAME theme files not found; GTK3 apps keep Adwaita"
+fi
+
 if [ "${1:-}" = "--fonts" ]; then
     if command -v gsettings >/dev/null; then
-        [ -f "$STATE" ] || cat > "$STATE" <<EOF
+        grep -q '^OLD_FONT=' "$STATE" 2>/dev/null || cat >> "$STATE" <<EOF
 OLD_FONT='$(gsettings get org.gnome.desktop.interface font-name | tr -d "'")'
 OLD_SCALE='$(gsettings get org.gnome.desktop.interface text-scaling-factor)'
 EOF

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.10.20-18-42 · updated 26-10-20-18-42
+# Version: 26.10.20-19-34 · updated 26-10-20-19-34
 # build-deb.sh — package Black Gorilla Theme as a click-to-install .deb
 #
 # WHY THIS EXISTS
@@ -18,6 +18,12 @@
 #   therefore installs the per-user override, which is the only mechanism
 #   libadwaita honours, and drives it from maintainer scripts + a login hook.
 #
+#   CORRECTION 2026-10-20: true for libadwaita, NOT for GTK3. GTK3 apps (Terminal,
+#   Disks, Document Viewer, Evolution, ...) read /usr/share/themes/<Name>/gtk-3.0
+#   and draw Adwaita's FIXED colours otherwise, which no gtk.css block reaches.
+#   So the package now ships BOTH: the per-user block for libadwaita and a real
+#   theme, Adwaita rebuilt with our palette, in /usr/share/themes/Black-Gorilla.
+#
 #   Consequence, stated plainly because it is unusual: this package writes into
 #   users' home directories. Debian policy discourages that for good reasons.
 #   It is done deliberately here because the file IS the product, and it is
@@ -31,7 +37,7 @@ set -euo pipefail
 # 0775/0664 otherwise leaks in from the build user's umask.
 umask 022
 
-VERSION="26.10.20-18-42"
+VERSION="26.10.20-19-34"
 PKG="black-gorilla-theme"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$HERE/build/${PKG}_${VERSION}_all"
@@ -47,6 +53,12 @@ install -m 0755 "$HERE/install.sh"             "$ROOT/usr/bin/$PKG"
 ln -sf "$PKG"                                  "$ROOT/usr/bin/gtk-high-contrast-theme"
 install -m 0755 "$HERE/get-microsoft-fonts.sh" "$ROOT/usr/share/$PKG/get-microsoft-fonts.sh"
 install -m 0644 "$HERE/README.md"              "$ROOT/usr/share/doc/$PKG/README.md"
+# GTK3 apps: Adwaita rebuilt with our palette (adwaita/build-adwaita.sh). Refuse
+# to package a theme that no longer matches its sources (drift).
+"$HERE/adwaita/build-adwaita.sh" --check >/dev/null \
+  || { echo "REFUSED: theme/Black-Gorilla differs from what adwaita/ builds; run adwaita/build-adwaita.sh"; exit 1; }
+mkdir -p "$ROOT/usr/share/themes"
+cp -r "$HERE/theme/Black-Gorilla" "$ROOT/usr/share/themes/Black-Gorilla"
 
 # The login hook. Runs for every user, exits instantly once that user has
 # decided (applied or reverted), so it never fights a deliberate revert.
@@ -113,7 +125,7 @@ EOF
 gzip -9n "$ROOT/usr/share/doc/$PKG/changelog.Debian"
 
 cat > "$ROOT/usr/share/man/man1/$PKG.1" <<'EOF'
-.TH BLACK-GORILLA-THEME 1 "2026-10-20" "26.10.20-18-42" "User Commands"
+.TH BLACK-GORILLA-THEME 1 "2026-10-20" "26.10.20-19-34" "User Commands"
 .SH NAME
 black\-gorilla\-theme \- pure black, high contrast theme for GTK3 and GTK4/libadwaita
 .SH SYNOPSIS

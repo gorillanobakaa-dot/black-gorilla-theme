@@ -1,0 +1,29 @@
+// Version: 26.10.20-19-34 · updated 26-10-20-19-34
+// Black Gorilla additions compiled into the end of GTK3 Adwaita (imported last, so they win on order).
+// Only what the palette cannot express. Settled theme spec: edges are outlines, never borders; pure cyan; no
+// box-shadow (SETTLED.md).
+
+// Window edges: 1px cyan, as GTK4's outline. GTK3 draws CSS `outline` ONLY for keyboard-focus rectangles, never for a
+// window frame (found 2026-10-20: the outline rule here drew nothing in Terminal or Disks). GTK3's frame IS a
+// box-shadow ring: Adwaita draws it as black at 75%, invisible on black. Same ring, cyan: no extra cost, and the
+// only mechanism GTK3 has. A GTK3 exception to the settled 'outline, never box-shadow' rule, which is about
+// borders reflowing on the CPU. Same in both states.
+decoration, decoration:backdrop {
+  box-shadow: 0 0 0 1px $fg_color;
+}
+// libhandy windows (Terminal, Disks, Document Viewer: window.unified) also draw a decoration-overlay node ON TOP of
+// the window (libhandy's Adwaita.css: inset 0 1px highlight). The ring goes there too, inside the edge, so it shows
+// whichever of the two nodes this window paints.
+window.unified > decoration-overlay, window.unified:backdrop > decoration-overlay {
+  box-shadow: inset 0 0 0 1px $fg_color;
+}
+
+// Selection is a solid block with black text; hover is a cyan outline on transparent (SETTLED.md).
+row:hover, row.activatable:hover, menu menuitem:hover, .menu menuitem:hover, .context-menu menuitem:hover {
+  outline: 1px solid $fg_color;
+  outline-offset: -1px;
+}
+menu menuitem:hover, .menu menuitem:hover, .context-menu menuitem:hover {
+  background-color: $selected_bg_color;
+  color: $selected_fg_color;
+}

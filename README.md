@@ -1,4 +1,4 @@
-<!-- Version: 26.10.20-18-42 · updated 26-10-20-18-42 -->
+<!-- Version: 26.10.20-19-34 · updated 26-10-20-19-34 -->
 # Black Gorilla Theme
 
 <!-- WHO-THIS-IS-FOR: managed block, do not edit by hand -->
@@ -14,6 +14,10 @@ Why, with the numbers: [PHILOSOPHY.md](https://github.com/gorillanobakaa-dot/Gor
 
 > *Two small CSS files that make dark-theme text actually readable. No root, no
 > package to install, nothing outside your home folder, one command to undo.*
+>
+> *Since 26.10.20-19-34 also a GTK3 theme (Adwaita rebuilt with this palette), so
+> older apps like Terminal and Disks match. Still no root without the package,
+> still one command to undo.*
 
 ![contrast: 16.75:1 vs 5.17:1](https://img.shields.io/badge/contrast-16.75%3A1-brightgreen) ![WCAG AAA](https://img.shields.io/badge/WCAG-AAA-brightgreen) ![no root required](https://img.shields.io/badge/root-not%20required-blue)
 
@@ -55,6 +59,28 @@ Window edges are a 1px cyan outline, the same as the path bar at rest, so a wind
 <p align="center">
   <a href="screenshots/window-edge-1px-cyan.png">
     <img src="screenshots/window-edge-1px-cyan.png" alt="Files window with a 1px cyan outline around its whole edge, against a black desktop" width="100%" />
+  </a>
+</p>
+
+**GTK3 apps (since 26.10.20-19-34).** Terminal, Disks and the other GTK3 apps draw Adwaita compiled with fixed
+colours, which the CSS block above cannot reach. They now get Adwaita rebuilt from its own sources with this palette,
+including the header bar, preferences and the 1px cyan window edge.
+
+<p align="center">
+  <a href="screenshots/gtk3-terminal.png">
+    <img src="screenshots/gtk3-terminal.png" alt="GNOME Terminal with a black header bar, cyan buttons and title, and a 1px cyan window edge" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="screenshots/gtk3-terminal-preferences.png">
+    <img src="screenshots/gtk3-terminal-preferences.png" alt="Terminal preferences: black window, cyan text and borders, the selected Shortcuts entry a solid pink block" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="screenshots/gtk3-disks.png">
+    <img src="screenshots/gtk3-disks.png" alt="Disks: black sidebar and header bar, cyan text, and a 1px cyan window edge" width="100%" />
   </a>
 </p>
 
@@ -106,7 +132,7 @@ machine. On Debian, Ubuntu, Mint and Pop!_OS you can also install it from a
 terminal:
 
 ```bash
-sudo apt install ./black-gorilla-theme_26.10.20-18-42_all.deb
+sudo apt install ./black-gorilla-theme_26.10.20-19-34_all.deb
 ```
 
 **The no-package way**, if you'd rather not install anything system-wide, or
@@ -139,7 +165,7 @@ Then restart an app (or log out and back in) to see the change.
 ./build-deb.sh
 ```
 
-Produces `dist/black-gorilla-theme_26.10.20-18-42_all.deb`, about 16 KB. No build
+Produces `dist/black-gorilla-theme_26.10.20-19-34_all.deb`, about 91 KB (17 KB before the GTK3 theme). No build
 dependencies beyond `dpkg-deb` — it is shell and CSS.
 
 ### Will it work on my computer?
@@ -148,6 +174,11 @@ If you run Linux with a GNOME-style desktop — Debian, Ubuntu, Fedora, Mint,
 Pop!_OS, Arch — yes. It needs no special hardware and no fast machine. It was
 built on a 2012 laptop and deliberately avoids anything that costs the graphics
 chip work, so it does not shorten your battery life.
+
+*Correction (2026-10-20): the battery and graphics-chip claims above and under
+"Animations neutralised" are reasoning, not measurement; nothing about CPU, GPU
+or battery has been measured yet (model inference). Pure black saves no power on
+an LCD, only on OLED.*
 
 ---
 

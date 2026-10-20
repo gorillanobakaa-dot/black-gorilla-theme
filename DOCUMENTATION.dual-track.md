@@ -1,4 +1,4 @@
-<!-- Version: 26.10.20-18-42 · updated 26-10-20-18-42 -->
+<!-- Version: 26.10.20-19-34 · updated 26-10-20-19-34 -->
 # Black Gorilla Theme — Technical & Dual-Track Documentation
 
 > Pure black (#000000), high-contrast (16.75:1) GTK3 & GTK4/libadwaita theme with crisp 1px cyan borders on floating menus and optical-size typography.
@@ -22,8 +22,8 @@ Now, when you right-click anywhere on the desktop or inside a folder:
 
 ### 3. Renaming & Versioning
 - **Name:** Officially branded as `black-gorilla-theme`.
-- **Version:** Uses the standard Gorilla timestamp format: `26.10.20-18-42` (YY.MM.DD-HH-MM).
-- **Package:** Generates a lightweight (~16 KB) click-to-install `.deb` package (`black-gorilla-theme_26.10.20-18-42_all.deb`).
+- **Version:** Uses the standard Gorilla timestamp format: `26.10.20-19-34` (YY.MM.DD-HH-MM).
+- **Package:** Generates a lightweight (~16 KB) click-to-install `.deb` package (`black-gorilla-theme_26.10.20-19-34_all.deb`).
 
 ---
 
@@ -268,3 +268,87 @@ windows and do not get this edge (model inference, not tested).
   (18:37:57, the fix), unscaled 1600x890 originals from the owner's screen.
 - Harness: `fieldkit gtk-theme check` (Fieldkit) now runs these checks deterministically, and
   `fieldkit build-harness symptom` points the owner's own words for this bug at it.
+
+---
+
+## Section F: GTK3 apps get a real theme (release 26.10.20-19-34)
+
+### Layman track
+
+**What you saw (stated in input).** After the unfocused-window fix, older programs still looked
+wrong: the Terminal had a light grey title bar, and its menus and preferences did not match.
+
+**Why.** Two families of programs draw this desktop. The newer one (Files, Settings) picks its
+colours by name, and the theme renames them, which is why those programs were already right. The
+older one (GTK3: Terminal, Disks, Document Viewer, Evolution and about 20 more) has its colours
+baked in as fixed numbers when GTK3 is built. No settings file reaches those numbers; you can only
+patch them one place at a time, and every program showed a new gap.
+
+**What changed.** Those baked-in colours come from one recipe file in GTK3's own source. We took
+that recipe for the exact GTK3 version on this computer, swapped in black, cyan and pink, and
+rebuilt it. The result is a theme called Black-Gorilla that GTK3 programs use. Every widget comes
+out in our colours at once, including ones nobody has looked at yet. It is chosen for you once,
+and the undo command puts your old theme back.
+
+**Window edges and dialogs (stated in input: the owner asked for them).** Every window and every
+dialog drawn inside a window (like Settings, System Details) now has the thin cyan edge.
+
+**What it does not cover.** The 6 Qt programs (Telegram, Wireshark and others) use a different
+toolkit, and Volume Control is the one program on a third kind of GTK. Both keep their own look.
+
+### Developer track
+
+**Source and proof of match.** GTK 3.24.49 `gtk/theme/Adwaita` (`_common.scss`, `_drawing.scss`,
+`_colors-public.scss`, `gtk-contained-dark.scss`), pinned by sha256 in `adwaita/SOURCES.sha256`, 66
+assets in `adwaita/ASSETS.sha256`. Compiled stock with `sassc -a -M -t compact` (upstream's
+`parse-sass.sh` options): 957 of 957 rules appear verbatim in the installed
+`libgtk-3.so.0.2417.32` (measured), so the sources are the ones this machine runs.
+
+**Build.** `adwaita/build-adwaita.sh` replaces `_colors.scss` with `adwaita/_colors.scss` (every
+upstream variable kept, values from BG/FG/ACCENT/DIM/DISABLED, backdrop values equal to focused),
+applies two string patches to `_common.scss` that refuse if the expected text count differs
+(suggested-action text `white` to `$selected_fg_color`, 7 sites, white on pink was about 1.5:1;
+tooltip text `white` to `$osd_text_color`), appends `_black-gorilla.scss`, compiles to
+`theme/Black-Gorilla/gtk-3.0/gtk.css` (961 rules), and `gtk-dark.css` is a one-line import (saved
+170 KB). `--check` rebuilds into a temp folder and fails on any difference; `build-deb.sh` refuses
+to package on drift. Downloads retry 4 times; one transient asset failure during development was
+refused, not shipped (measured).
+
+**Window edge in GTK3: outline does not draw (found by the owner's screenshots).** GTK3 renders CSS
+`outline` only for keyboard-focus rectangles, so the outline rule shipped in 26.10.20-18-42 never
+drew on any GTK3 window. GTK3's frame is `decoration { box-shadow: 0 0 0 1px ... }`; Adwaita draws it
+black at 75%. Now `box-shadow: 0 0 0 1px $FG`, plus `window.unified > decoration-overlay { box-shadow:
+inset 0 0 0 1px $FG }` for libhandy windows, whose overlay node (from libhandy's own Adwaita.css,
+read with `gresource extract`) paints over the decoration. A GTK3 exception to the settled
+"outline, never box-shadow", whose reason is CPU reflow from borders: a box-shadow ring replacing a
+box-shadow ring costs nothing extra (model inference).
+
+**In-window dialogs (libadwaita AdwDialog).** `floating-sheet > sheet` and `bottom-sheet > sheet`
+carry libadwaita's `outline: 1px solid RGB(255 255 255/7%)` (read from `base.css` via `gresource
+extract`); the GTK4 block sets it to `$FG`.
+
+**Install.** `install.sh` copies `theme/Black-Gorilla` to `~/.local/share/themes` (only when it
+differs; the package ships `/usr/share/themes/Black-Gorilla` instead) and selects it via
+`gsettings org.gnome.desktop.interface gtk-theme` ONCE, saving `OLD_THEME` in the state file;
+`--revert` restores it and leaves the files in place. GTK3 apps switch theme live. Tested in a fake
+HOME with `GSETTINGS_BACKEND=memory` so the test never touched the real setting (measured: real
+value unchanged before and after).
+
+**Coverage on this machine (measured by linking, 2026-10-20).** 20 libadwaita apps (CSS block),
+25 GTK3 apps incl. 8 on libhandy (rebuilt theme), 1 plain GTK4 (Volume Control: not rebuilt, not
+worth it for one app), 6 Qt (out of reach).
+
+**Size.** Theme 456 KB on disk; the .deb grows from 17 KB to about 92 KB (measured at the first
+package build), about 12 s at 8 KB/s (model inference from the size).
+
+**Performance: NOT measured.** CPU, GPU and battery effects are reasoning only (fewer animation
+frames, no blurred GTK3 window shadow; no saving from black on an LCD). Measuring needs an idle
+machine: deferred until the Firefox build finishes.
+
+### Verification evidence
+
+- Owner's screenshots, unscaled originals: `gtk3-terminal.png` (19:37:12, header bar and edge),
+  `gtk3-terminal-preferences.png` (19:26:23), `gtk3-disks.png` (19:36:57, edge). System Details
+  with its new edge seen by the owner (19:39), not published: it shows hardware details.
+- Both stylesheets and the theme parse in GTK 4.18 / 3.24 with 0 errors.
+- `fieldkit gtk-theme check`: no missing backdrop names, fades or root greys.

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=Black-Gorilla
+Comment=Adwaita rebuilt with the Black Gorilla palette (black, cyan, pink)
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=Black-Gorilla
