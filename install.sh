@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.08.15-08-17 · updated 26-08-15-08-17
+# Version: 26.10.20-18-27 · updated 26-10-20-18-27
 # install.sh — Black Gorilla Theme: a pure black, high-contrast GTK theme that
 # fixes secondary text, context menu borders, and uses optical-size typography
 # when the fonts are available.
@@ -100,6 +100,13 @@ $BEGIN
 @define-color accent_bg_color $ACCENT;
 @define-color accent_fg_color $BG;
 @define-color borders $FG;
+/* Unfocused ("backdrop") windows. libadwaita 1.7 swaps to these names when a
+ * window loses focus (Alt+Tab away). Left unset they fall back to the LIGHT
+ * scheme's #f2f2f4, so the sidebar turned into a white bar the moment another
+ * app was on top. Named, like the rest, so new widgets inherit them. */
+@define-color headerbar_backdrop_color $BG;
+@define-color sidebar_backdrop_color $BG;
+@define-color secondary_sidebar_backdrop_color $BG;
 
 /* Typography: optical sizes. Body text uses the face drawn for small sizes,
  * headings use the one drawn for large sizes. Falls back automatically. */
@@ -191,6 +198,26 @@ modelbutton:disabled, modelbutton:disabled label,
 menuitem:disabled, menuitem:disabled label,
 button:disabled label, row:disabled label { opacity: 1.0; color: $DISABLED; }
 
+/* Unfocused windows keep full contrast. libadwaita fades the header bar,
+ * search bar, action bar and tab bar to filter: opacity(0.5) on backdrop, which
+ * halves every contrast ratio above. Same selectors as libadwaita 1.7, so the
+ * user stylesheet wins on priority alone. */
+headerbar:backdrop > windowhandle,
+toolbarview > .top-bar:backdrop > windowhandle,
+toolbarview > .bottom-bar:backdrop > windowhandle,
+searchbar > revealer > box:backdrop > *,
+actionbar > revealer > box:backdrop > *,
+tabbar .box:backdrop > scrolledwindow,
+tabbar .box:backdrop > .start-action, tabbar .box:backdrop > .end-action,
+banner > revealer > widget:backdrop > label,
+banner > revealer > widget:backdrop > button { filter: none; }
+/* GTK4 apps WITHOUT libadwaita load GTK's built-in theme instead, which fades
+ * the window title and greys button text (#919190) on backdrop. inherit takes
+ * the colour the button had when focused; coloured buttons keep their own. */
+headerbar:backdrop .title, .titlebar:backdrop:not(headerbar) .title { filter: none; }
+button:backdrop:not(:disabled):not(.suggested-action):not(.destructive-action):not(.opaque),
+notebook > header > tabs > arrow:backdrop:not(:disabled) { color: inherit; }
+
 /* Cost the GPU nothing: no fade work, no battery spent animating. */
 * { transition-duration: 0.01ms; animation-duration: 0.01ms; }
 $END
@@ -211,6 +238,13 @@ $BEGIN
 @define-color theme_unfocused_fg_color $FG;
 @define-color theme_unfocused_base_color $BG;
 @define-color theme_unfocused_text_color $FG;
+/* The rest of GTK3's unfocused set. Unset, an unfocused window's selection
+ * fell back to Adwaita blue, its borders and title to grey. */
+@define-color theme_unfocused_selected_bg_color $ACCENT;
+@define-color theme_unfocused_selected_fg_color $BG;
+@define-color unfocused_borders $FG;
+@define-color unfocused_insensitive_color $BG;
+@define-color wm_unfocused_title $FG;
 /* yelp and other help viewers take page link colours from the theme.
  * GTK's default blue on black is 5.57:1; cyan is 16.75:1. */
 @define-color link_color $FG;
@@ -235,8 +269,22 @@ row:selected, list row:selected, menuitem:selected,
 }
 row:selected label, menuitem:selected label,
 .view:selected label, row:selected .dim-label { color: $BG; opacity: 1.0; }
-.dim-label, label.dim-label { opacity: 1.0; color: $DIM; }
-*:disabled, label:disabled { opacity: 1.0; color: $DISABLED; }
+/* Unfocused windows keep full contrast. GTK3's Adwaita writes its backdrop
+ * colours as fixed greys (#919190 text), not names, so the named colours above
+ * never reach them: the whole window's text greyed out on Alt+Tab. These are
+ * the elements it greys; the user stylesheet wins on priority alone. */
+.background:backdrop { color: $FG; }
+button:backdrop:not(:disabled):not(.suggested-action):not(.destructive-action),
+notebook > header > tabs > arrow:backdrop:not(:disabled),
+menu menuitem:backdrop, .menu menuitem:backdrop, .context-menu menuitem:backdrop,
+placessidebar row:backdrop, notebook > header tab:backdrop,
+.inline-toolbar toolbutton > button:backdrop,
+switch:backdrop, scale slider:backdrop, spinner:backdrop, .keycap:backdrop { color: inherit; }
+button.sidebar-button:backdrop > image { opacity: 1.0; }
+row:selected:backdrop, row:selected:backdrop label, row:selected:backdrop button,
+.view:selected:backdrop, menuitem:selected:backdrop label { color: $BG; }
+.dim-label, label.dim-label, .dim-label:backdrop { opacity: 1.0; color: $DIM; }
+*:disabled, label:disabled, *:disabled:backdrop { opacity: 1.0; color: $DISABLED; }
 * { transition-duration: 0.01ms; animation-duration: 0.01ms; }
 $END
 CSS
@@ -297,9 +345,15 @@ INFO
       echo "Reverted. Restart apps (or log out) to see stock appearance."
       exit 0 ;;
   --apply-once)
-      [ -e "$STAMP" ] && exit 0
-      [ -e "$HOME/.config/high-contrast-theme.decided" ] && exit 0
-      mkdir -p "$(dirname "$STAMP")" && : > "$STAMP"
+      if [ -e "$STAMP" ] || [ -e "$HOME/.config/high-contrast-theme.decided" ]; then
+          # Already decided. A user who KEPT the theme still has our block, so
+          # refresh it: otherwise a package upgrade never reaches them and they
+          # keep the old CSS (how the 26.08.15 unfocused-window bug would have
+          # survived every upgrade). A user who reverted has no block: untouched.
+          grep -qF "$BEGIN" "$GTK4" 2>/dev/null || exit 0
+      else
+          mkdir -p "$(dirname "$STAMP")" && : > "$STAMP"
+      fi
       QUIET=1 ;;
   apply|--fonts) ;;
   # Print the header block as usage. The range is DERIVED, not hardcoded: a

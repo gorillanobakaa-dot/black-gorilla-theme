@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.08.15-08-17 · updated 26-08-15-08-17
+# Version: 26.10.20-18-27 · updated 26-10-20-18-27
 # build-deb.sh — package Black Gorilla Theme as a click-to-install .deb
 #
 # WHY THIS EXISTS
@@ -31,7 +31,7 @@ set -euo pipefail
 # 0775/0664 otherwise leaks in from the build user's umask.
 umask 022
 
-VERSION="26.08.15-08-17"
+VERSION="26.10.20-18-27"
 PKG="black-gorilla-theme"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$HERE/build/${PKG}_${VERSION}_all"
@@ -113,7 +113,7 @@ EOF
 gzip -9n "$ROOT/usr/share/doc/$PKG/changelog.Debian"
 
 cat > "$ROOT/usr/share/man/man1/$PKG.1" <<'EOF'
-.TH BLACK-GORILLA-THEME 1 "2026-08-15" "26.08.15-08-17" "User Commands"
+.TH BLACK-GORILLA-THEME 1 "2026-10-20" "26.10.20-18-27" "User Commands"
 .SH NAME
 black\-gorilla\-theme \- pure black, high contrast theme for GTK3 and GTK4/libadwaita
 .SH SYNOPSIS

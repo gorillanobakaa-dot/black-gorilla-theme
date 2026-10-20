@@ -1,4 +1,4 @@
-<!-- Version: 26.08.15-08-17 · updated 26-08-15-08-17 -->
+<!-- Version: 26.10.20-18-27 · updated 26-10-20-18-27 -->
 # Black Gorilla Theme
 
 <!-- WHO-THIS-IS-FOR: managed block, do not edit by hand -->
@@ -81,7 +81,7 @@ machine. On Debian, Ubuntu, Mint and Pop!_OS you can also install it from a
 terminal:
 
 ```bash
-sudo apt install ./black-gorilla-theme_26.08.15-08-17_all.deb
+sudo apt install ./black-gorilla-theme_26.10.20-18-27_all.deb
 ```
 
 **The no-package way**, if you'd rather not install anything system-wide, or
@@ -114,7 +114,7 @@ Then restart an app (or log out and back in) to see the change.
 ./build-deb.sh
 ```
 
-Produces `dist/black-gorilla-theme_26.08.15-08-17_all.deb`, about 16 KB. No build
+Produces `dist/black-gorilla-theme_26.10.20-18-27_all.deb`, about 16 KB. No build
 dependencies beyond `dpkg-deb` — it is shell and CSS.
 
 ### Will it work on my computer?
@@ -162,7 +162,16 @@ never addressed.**
 
 Explicit selectors are used only where a colour name cannot express the rule:
 focus rings, disabled-item visibility, context menu edges (`popover > contents`),
-edge drawing, animation timing.
+edge drawing, animation timing, unfocused windows.
+
+**Correction (2026-10-20):** "no gaps" was wrong for unfocused windows. The
+vocabulary has a second set of names for a window that has lost focus
+(`sidebar_backdrop_color`, `headerbar_backdrop_color`, GTK3's `unfocused_*`),
+and releases up to 26.08.15-08-17 never set them. On Alt+Tab away from Files
+the sidebar turned into a light grey bar and the header bar faded to half
+strength. Toolkits also dim unfocused windows with fixed greys and
+`filter: opacity(0.5)`, which no colour name reaches. Fixed in 26.10.20-18-27
+by naming the backdrop colours and overriding each fade by selector.
 
 ### Typography — optical sizes
 
