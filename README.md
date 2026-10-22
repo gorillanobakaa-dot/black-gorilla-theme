@@ -1,4 +1,4 @@
-<!-- Version: 26.10.20-19-34 · updated 26-10-20-19-34 -->
+<!-- Version: 26.10.22-14-03 · updated 26-10-22-16-30 -->
 # Black Gorilla Theme
 
 <!-- WHO-THIS-IS-FOR: managed block, do not edit by hand -->
@@ -132,7 +132,7 @@ machine. On Debian, Ubuntu, Mint and Pop!_OS you can also install it from a
 terminal:
 
 ```bash
-sudo apt install ./black-gorilla-theme_26.10.20-19-34_all.deb
+sudo apt install ./black-gorilla-theme_26.10.22-14-03_all.deb
 ```
 
 **The no-package way**, if you'd rather not install anything system-wide, or
@@ -159,13 +159,27 @@ those files alone.
 
 Then restart an app (or log out and back in) to see the change.
 
+**If the theme went light after a login (versions before 26.10.22-14-03).** Two login launchers could start the
+theme at the same moment: ours and `gtk-high-contrast-theme.desktop`, left behind by the theme's old package name
+when it was removed but not purged. Both wrote the same file at once and it came out as two mixed copies, which GTK
+cannot read, so Files and Settings fell back to light Adwaita. From 26.10.22-14-03 only one run writes at a time, so
+this cannot happen again. To clean up an older install:
+
+```bash
+sudo apt purge gtk-high-contrast-theme
+black-gorilla-theme
+```
+
+The first removes the leftover launcher (it says "not installed" if there is none), the second rewrites your two
+stylesheets once. Then close and open Files (`/usr/bin/nautilus -q` first) and Settings.
+
 ### Build the .deb yourself
 
 ```bash
 ./build-deb.sh
 ```
 
-Produces `dist/black-gorilla-theme_26.10.20-19-34_all.deb`, about 91 KB (17 KB before the GTK3 theme). No build
+Produces `dist/black-gorilla-theme_26.10.22-14-03_all.deb`, about 91 KB (17 KB before the GTK3 theme). No build
 dependencies beyond `dpkg-deb` — it is shell and CSS.
 
 ### Will it work on my computer?
