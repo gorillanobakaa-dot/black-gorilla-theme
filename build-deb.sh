@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.10.20-19-34 · updated 26-10-20-19-34
+# Version: 26.10.22-14-03 · updated 26-10-22-14-03
 # build-deb.sh — package Black Gorilla Theme as a click-to-install .deb
 #
 # WHY THIS EXISTS
@@ -37,7 +37,7 @@ set -euo pipefail
 # 0775/0664 otherwise leaks in from the build user's umask.
 umask 022
 
-VERSION="26.10.20-19-34"
+VERSION="26.10.22-14-03"
 PKG="black-gorilla-theme"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$HERE/build/${PKG}_${VERSION}_all"
@@ -55,8 +55,16 @@ install -m 0755 "$HERE/get-microsoft-fonts.sh" "$ROOT/usr/share/$PKG/get-microso
 install -m 0644 "$HERE/README.md"              "$ROOT/usr/share/doc/$PKG/README.md"
 # GTK3 apps: Adwaita rebuilt with our palette (adwaita/build-adwaita.sh). Refuse
 # to package a theme that no longer matches its sources (drift).
-"$HERE/adwaita/build-adwaita.sh" --check >/dev/null \
-  || { echo "REFUSED: theme/Black-Gorilla differs from what adwaita/ builds; run adwaita/build-adwaita.sh"; exit 1; }
+# Its own last line is the reason: DRIFT (exit 1) is a real difference, REFUSED
+# (exit 2) is a failed download or checksum. Print it as it is: on 2026-10-22 a
+# flaky fetch was reported here as "differs", which sends you to rebuild a theme
+# that was fine.
+if ! drift_out="$("$HERE/adwaita/build-adwaita.sh" --check 2>&1)"; then
+    echo "REFUSED: the theme/Black-Gorilla drift check did not pass:"
+    printf '  %s\n' "$(printf '%s\n' "$drift_out" | tail -1)"
+    echo "  (DRIFT = run adwaita/build-adwaita.sh; could not fetch = network, try again)"
+    exit 1
+fi
 mkdir -p "$ROOT/usr/share/themes"
 cp -r "$HERE/theme/Black-Gorilla" "$ROOT/usr/share/themes/Black-Gorilla"
 
@@ -112,6 +120,9 @@ EOF
 cat > "$ROOT/usr/share/doc/$PKG/changelog.Debian" <<EOF
 $PKG ($VERSION) unstable; urgency=low
 
+  * Login hook writes under a lock with a per-run temp file: two launchers
+    running at once (a leftover gtk-high-contrast-theme.desktop) scrambled
+    gtk.css into two interleaved copies (2026-10-22).
   * Renamed to Black Gorilla Theme.
   * Versioned with YY-MM-DD-HH-MM timestamp scheme.
   * Added 1px crisp cyan border and background to right-click context menus
@@ -125,7 +136,7 @@ EOF
 gzip -9n "$ROOT/usr/share/doc/$PKG/changelog.Debian"
 
 cat > "$ROOT/usr/share/man/man1/$PKG.1" <<'EOF'
-.TH BLACK-GORILLA-THEME 1 "2026-10-20" "26.10.20-19-34" "User Commands"
+.TH BLACK-GORILLA-THEME 1 "2026-10-22" "26.10.22-14-03" "User Commands"
 .SH NAME
 black\-gorilla\-theme \- pure black, high contrast theme for GTK3 and GTK4/libadwaita
 .SH SYNOPSIS

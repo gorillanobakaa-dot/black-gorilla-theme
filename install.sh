@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version: 26.10.20-19-34 · updated 26-10-20-19-34
+# Version: 26.10.22-14-03 · updated 26-10-22-14-03
 # install.sh — Black Gorilla Theme: a pure black, high-contrast GTK theme that
 # fixes secondary text, context menu borders, and uses optical-size typography
 # when the fonts are available.
@@ -411,11 +411,24 @@ say "Reversible at any time with: $0 --revert"
 say
 
 mkdir -p "$(dirname "$GTK4")" "$(dirname "$GTK3")"
+# One writer at a time. On 2026-10-22 two login launchers (ours and a leftover
+# gtk-high-contrast-theme.desktop the renamed old package left behind) ran
+# --apply-once at the same instant, shared the fixed "$f.new" temp name, and
+# wrote both files as two interleaved copies; libadwaita could not parse them
+# and every app fell back to light Adwaita. With the lock the second run waits,
+# then finds the block already current and writes nothing.
+LOCK="$HOME/.config/.black-gorilla-theme.lock"
+if command -v flock >/dev/null; then
+    exec 9>"$LOCK" && flock -w 30 9 || { echo "Black Gorilla Theme: another run holds $LOCK" >&2; exit 1; }
+fi
 # Write only when the result differs. An identical rewrite still moves the
 # file's time, and every open app then LOOKS stale to a checker comparing its
 # start time with the stylesheet's (fieldkit gtk-theme check, 2026-10-20).
 write_css () {
-    local f="$1" block="$2" tmp="$1.new"
+    # Temp name unique per run (mktemp), beside the target so the final move
+    # stays on one filesystem; never a fixed name two runs could share.
+    local f="$1" block="$2" tmp
+    tmp="$(mktemp "$1.XXXXXX")" || return 1
     if [ -f "$f" ]; then cp "$f" "$tmp"; else : > "$tmp"; fi
     strip "$tmp"; printf '%s\n' "$block" >> "$tmp"
     if [ -f "$f" ] && cmp -s "$tmp" "$f"; then
